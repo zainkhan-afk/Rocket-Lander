@@ -19,15 +19,24 @@ while True:
 	if k == ord("q"):
 		break
 
-	if k == ord("d"):
+	elif k == ord("d"):
 		my_controller.angle += 5/180*np.pi
+		# my_controller.angle = 45/180*np.pi
 
-	if k == ord("a"):
+	elif k == ord("a"):
 		my_controller.angle -= 5/180*np.pi
+		# my_controller.angle = -45/180*np.pi
 
 
-	if k == ord("w"):
+	elif k == ord("w"):
 		my_controller.magnitude -= 0.5
 
-	if k == ord("s"):
+	elif k == ord("s"):
 		my_controller.magnitude += 0.5
+
+	elif k == ord(" "):
+		my_controller.magnitude = -100
+
+	else:
+		my_controller.magnitude = -1
+		# my_controller.angle = 0

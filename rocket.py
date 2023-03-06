@@ -23,8 +23,10 @@ class Rocket:
 		self.thruster_right_force_world_frame = Vector(x = 0, y = 1)
 
 		self.color = (255, 0, 0)
-		self.thruster_color = (0, 255, 255)
-		self.fire_color = (0, 0, 255)
+		self.thruster_color = (125, 255, 255)
+		self.fire_color1 = (0, 0, 255)
+		self.fire_color2 = (0, 125, 255)
+		self.fire_color3 = (0, 255, 255)
 		self.lander_color = (125, 125, 125)
 		self.top_color = (0, 0, 255)
 
