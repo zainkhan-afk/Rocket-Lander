@@ -28,3 +28,6 @@ def get_transformed_vector(in_vec, angle):
 
 	out_vec = Vector(x = p[0,0], y = p[1,0])
 	return out_vec
+
+def get_dist(x1, y1, x2, y2):
+	return np.sqrt((y1 - y2)**2 + (x1 - x2)**2)

@@ -1,20 +1,18 @@
-from renderer import Renderer
+from simulator import Simulator
 from rocket import Rocket
-from physics import Physics
 from controller import Controller
 import numpy as np
 
-renderer = Renderer()
-rocket = Rocket()
-physics = Physics()
+sim = Simulator()
 
+all_entities = []
+rocket = Rocket()
 my_controller = Controller()
 rocket.connect_controller(my_controller)
+
+all_entities.append(rocket)
 while True:
-	physics.solve(rocket)
-	renderer.clear()
-	renderer.draw(rocket)
-	k = renderer.render()
+	k = sim.run_step(all_entities)
 
 	if k == ord("q"):
 		break
