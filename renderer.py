@@ -141,7 +141,7 @@ class Renderer:
 
 	def render(self):
 		cv2.imshow("canvas", self.canvas)
-		return cv2.waitKey(30)
+		return cv2.waitKey(1)
 
 	def clear(self):
 		self.canvas = np.zeros((cfg.CANVAS_H, cfg.CANVAS_W, 3)).astype("uint8")

@@ -8,9 +8,12 @@ import random
 
 class GeneticAlgorithm:
 	def __init__(self, mutation_rate = 0.01, population = 10):
-		self.mutation_rate = mutation_rate
+		self.original_mutation_rate = mutation_rate
+		self.current_mutation_rate = mutation_rate
 		self.population = population
-		self.sim = Simulator(headless = True)
+		self.sim = Simulator(headless = False)
+		self.prev_fittest = 0
+		self.same_fitness_counter = 0
 
 		self.all_entities = []
 
@@ -22,13 +25,15 @@ class GeneticAlgorithm:
 
 	def calc_fitness(self, rocket):
 		if rocket.crashed:
-			m = 0.1
+			m = 1 - 100/rocket.time_alive
 		else:
-			m = 1
+			m = 10
 
-		# return m*(rocket.time_alive + 1/rocket.dist  + rocket.points_collected)*1/rocket.angle_error
+
 		angle_error = rocket.angle_error/rocket.time_alive
-		return (rocket.time_alive)
+		return m*(rocket.points_collected + 1/rocket.dist + 1/angle_error)
+		return m*(rocket.time_alive + 1/rocket.dist )*rocket.points_collected + 1/angle_error
+		return rocket.time_alive * 1/angle_error
 
 	def get_population_fitness(self):
 		all_fitness = []
@@ -51,20 +56,25 @@ class GeneticAlgorithm:
 
 		return new_pop
 
-	def mutate_wts(self, wts):
-		R, C = wts.shape
+	def mutate_wts(self, wts, mutation_rate):
+		for layer_wts in wts:
+			R, C = layer_wts.shape
 
-		for r in range(R):
-			for c in range(C):
-				if np.random.random()<self.mutation_rate:
-					wts[r, c] = np.random.normal()
+			for r in range(R):
+				for c in range(C):
+					if np.random.random()<mutation_rate:
+						layer_wts[r, c] = np.random.normal()
 
 		return wts
 
 	def mutate_population(self, pop):
+		pop_50_percent = int(0.5*self.population)
 		for p in range(1, self.population):
 			wts = pop[p].controller.get_wts()
-			wts = self.mutate_wts(wts)
+			if p<pop_50_percent:
+				wts = self.mutate_wts(wts, self.original_mutation_rate)
+			else:
+				wts = self.mutate_wts(wts, self.current_mutation_rate)
 			pop[p].controller.set_wts(wts)
 
 		return pop
@@ -86,6 +96,22 @@ class GeneticAlgorithm:
 
 		all_fitness = self.get_population_fitness()
 		highest_fitness = max(all_fitness)
+		
+		if highest_fitness == self.prev_fittest:
+			self.same_fitness_counter += 1
+		else:
+			self.same_fitness_counter = 0
+			self.current_mutation_rate = self.original_mutation_rate
+
+		if self.same_fitness_counter>5:
+			self.current_mutation_rate += 0.02
+			if self.current_mutation_rate>0.5:
+				self.current_mutation_rate = 0.5
+			print(f"Increasing mutation rate to: {self.current_mutation_rate}")
+
+		self.prev_fittest = highest_fitness
+
+		
 		fittest_idx = all_fitness.index(highest_fitness)
 		print(f"Fittest: {highest_fitness}\n\n")
 
@@ -95,8 +121,8 @@ class GeneticAlgorithm:
 
 
 if __name__ == "__main__":
-	GA = GeneticAlgorithm(population = 100)
-	for g in range(100):
+	GA = GeneticAlgorithm(population = 500)
+	for g in range(1001):
 		if g%10 == 0:
 			GA.sim.headless = False
 		else:

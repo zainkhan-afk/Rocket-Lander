@@ -87,6 +87,12 @@ class Rocket:
 		elif self.pos.y<0:
 			self.pos.y = cfg.CANVAS_H
 
+	def smooth_force_transition(self, thruster_force_new, thruster_force_old):
+		angle_diff = thruster_force_new.angle - thruster_force_old.angle
+		magnitude_diff = thruster_force_new.magnitude - thruster_force_old.magnitude
+		return Vector(magnitude = thruster_force_old.magnitude + magnitude_diff*0.1, angle = thruster_force_old.angle + angle_diff*0.1)
+
+
 	def update(self, acc):
 		if self.controller is not None:
 			if self.controller.name == "FCNN":
@@ -94,8 +100,11 @@ class Rocket:
 			else:
 				state = self.get_robot_state()
 			thruster_left_force_robot_frame, thruster_right_force_robot_frame = self.controller(state)
-			self.thruster_left_force_world_frame  = get_transformed_vector(thruster_left_force_robot_frame, self.orientation)
-			self.thruster_right_force_world_frame = get_transformed_vector(thruster_right_force_robot_frame, self.orientation)
+			new_thruster_left_force_world_frame  = get_transformed_vector(thruster_left_force_robot_frame, self.orientation)
+			new_thruster_right_force_world_frame = get_transformed_vector(thruster_right_force_robot_frame, self.orientation)
+
+			self.thruster_left_force_world_frame = self.smooth_force_transition(new_thruster_left_force_world_frame, self.thruster_left_force_world_frame)
+			self.thruster_right_force_world_frame = self.smooth_force_transition(new_thruster_right_force_world_frame, self.thruster_right_force_world_frame)
 
 			net_torque = thruster_right_force_robot_frame.y*self.thruster_dist - thruster_left_force_robot_frame.y*self.thruster_dist
 			angular_acc = net_torque/(self.thruster_dist*self.mass)
@@ -123,10 +132,11 @@ class Rocket:
 
 		self.dist = get_dist(self.pos.x, self.pos.y, self.goal[0], self.goal[1])
 		if self.dist<20:
+			random.seed(self.goal[0])
 			self.goal = np.array([random.randint(5, cfg.CANVAS_W-5), random.randint(5, cfg.CANVAS_H-5)])
-			self.points_collected += 10
+			self.points_collected += 1
 			self.age = 0 
 
 		self.time_alive += 1
 		self.age += 1
-		self.angle_error += abs(self.orientation)
+		self.angle_error += abs(int(self.orientation*180/np.pi))
